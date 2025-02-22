@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz SSIAP1 Sécurité Incendie</title>
+  <style>
+    /* Style global – Thème sombre mais lumineux, police en gras */
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-weight: bold;
+      background: linear-gradient(135deg, #8e44ad, #3498db);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .page {
+      display: none;
+      width: 90%;
+      max-width: 600px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      position: relative;
+      border: 4px solid #2980b9;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1, h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    /* Boutons modernisés avec bordure marquée, police grasse */
+    button {
+      background-color: #34495e;
+      border: 2px solid #2c3e50;
+      border-radius: 10px;
+      color: #ecf0f1;
+      font-size: 16px;
+      padding: 10px 20px;
+      cursor: pointer;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+      transition: background 0.3s;
+      margin: 10px;
+    }
+    button:hover {
+      background-color: #2c3e50;
+    }
+    /* Overlay pour l'Index */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.5s;
+    }
+    .overlay-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 3px solid #2980b9;
+    }
+    .overlay-content a {
+      display: block;
+      margin: 10px;
+      color: #34495e;
+      text-decoration: none;
+      font-size: 18px;
+      border-bottom: 1px dashed #34495e;
+    }
+    /* Styles spécifiques au Quiz */
+    #question-counter {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #2980b9;
+    }
+    #question-text {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    #options {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    /* Label complet, flex pour un alignement vertical centré */
+    .option {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      padding: 10px;
+      border: 2px solid #bdc3c7;
+      border-radius: 8px;
+      transition: background 0.3s, border 0.3s;
+      background: #ecf0f1;
+      cursor: pointer;
+    }
+    .option:hover {
+      background: #dfe6e9;
+    }
+    /* Checkbox circulaire et plus esthétique */
+    .option input[type="checkbox"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #2c3e50;
+      border-radius: 50%;
+      margin-right: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+    .option input[type="checkbox"]:checked {
+      background-color: #34495e;
+      border-color: #34495e;
+    }
+    .option input[type="checkbox"]:checked:after {
+      content: "✔";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ecf0f1;
+      font-size: 12px;
+    }
+    /* Feedback animé pour bonnes/mauvaises réponses */
+    .correct-message {
+      color: #27ae60;
+      font-size: 24px;
+      margin-top: 10px;
+      animation: popIn 0.5s ease-out;
+    }
+    .incorrect-message {
+      color: #c0392b;
+      font-size: 24px;
+      margin-top: 10px;
+      animation: popIn 0.5s ease-out;
+    }
+    .warning-message {
+      color: #e74c3c;
+      font-size: 18px;
+      margin-top: 10px;
+      animation: popIn 0.5s ease-out;
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    /* Encadrement surlignant pour les réponses correctes */
+    .highlight {
+      border: 2px solid #27ae60;
+      background: #d5f5e3;
+      animation: highlightAnim 0.5s;
+    }
+    @keyframes highlightAnim {
+      from { transform: scale(0.95); }
+      to { transform: scale(1); }
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 24px; }
+      h2 { font-size: 20px; }
+      button { font-size: 14px; padding: 8px 16px; }
+      #question-text { font-size: 18px; }
+      #question-counter { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Overlay Index -->
+  <div id="overlay-index" class="overlay" onclick="closeOverlay()">
+    <div class="overlay-content" onclick="event.stopPropagation()">
+      <a href="page1.html">Quiz 1</a>
+      <a href="page2.html">Quiz 2</a>
+      <a href="page3.html">Quiz 3</a>
+	  <a href="page4.html">Quiz 4</a>
+      <button onclick="closeOverlay()">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Page d'accueil -->
+  <div id="home-page" class="page active">
+    <h1>Quiz SSIAP1 Sécurité Incendie</h1>
+    <button id="start-btn" onclick="startQuiz()">Start</button>
+    <br>
+    <button id="index-btn" onclick="openOverlay()">Index</button>
+  </div>
+
+  <!-- Page du Quiz -->
+  <div id="quiz-page" class="page">
+    <div id="question-counter"></div>
+    <div id="question-text"></div>
+    <div id="options"></div>
+    <button id="validate-btn" onclick="validateAnswer()">Valider</button>
+    <button id="next-btn" onclick="nextQuestion()" style="display:none;">Suivant</button>
+    <div id="feedback"></div>
+  </div>
+
+  <!-- Page finale -->
+  <div id="final-page" class="page">
+    <h2>Votre Score: <span id="score"></span></h2>
+    <div id="result-text"></div>
+    <button onclick="restartQuiz()">Recommencer</button>
+    <br>
+    <button id="final-index-btn" onclick="openOverlay()">Index</button>
+  </div>
+
+  <script>
+    let currentQuestion = 0;
+    let score = 0;
+    const questions = [
+      /* ... VOS QUESTIONS ... */
+{
+        "question": "Que comprend l’éclairage de sécurité ?",
+        "options": [
+            "L’éclairage de remplacement et l’éclairage normal",
+            "L’éclairage de sécurité et l’éclairage d’ambiance",
+            "L’éclairage d’évacuation et l’éclairage de remplacement",
+            "L’éclairage d’ambiance et d’anti-panique",
+            "L’éclairage d’évacuation et l’éclairage d’ambiance ou d’anti-panique",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            4
+        ]
+    },
+    {
+        "question": "En IGH, la diffusion de l’alarme générale sonore doit être :",
+        "options": [
+            "Généralisée à l’ensemble de l’immeuble",
+            "Limitée aux locaux situés en infrastructure",
+            "Limitée au compartiment sinistré",
+            "Limitée à deux compartiments",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0
+        ]
+    },
+    {
+        "question": "Quels combustibles forment des braises au cours de leur combustion ?",
+        "options": [
+            "Les liquides",
+            "Les solides",
+            "Les gaz",
+            "Les fumées",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "En ERP, on trouve des DM dans un SSI de catégorie :",
+        "options": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            0,
+            1,
+            2,
+            3
+        ]
+    },
+    {
+        "question": "En ERP, les locaux sont répartis en locaux à risques :",
+        "options": [
+            "Normaux",
+            "Courants",
+            "Moyens",
+            "Importants",
+            "Dangereux",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            4
+        ]
+    },
+    {
+        "question": "Lors d’une ronde, vous apercevez de la fumée s’échappant d’un local technique, que faites-vous ?",
+        "options": [
+            "Vous regagnez le poste de sécurité pour prévenir votre chef d’équipe",
+            "Vous saisissez un moyen d’extinction et vous ouvrez prudemment le local",
+            "Vous vous approchez et ouvrez la porte pour connaître l’étendue du sinistre",
+            "Vous contactez le PCS pour prévenir de la situation découverte",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            3
+        ]
+    },
+    {
+        "question": "En cours de ronde, vous sentez une odeur suspecte. Vous :",
+        "options": [
+            "Effectuez la levée de doute",
+            "Poursuivez votre ronde",
+            "Prévenez votre PC sécurité",
+            "Prévenez les pompiers",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            0,
+            2
+        ]
+    },
+    {
+        "question": "Les consignes particulières sont destinées :",
+        "options": [
+            "Au public et au personnel",
+            "Uniquement aux agents SSIAP",
+            "À une catégorie de personnes déterminée",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            2
+        ]
+    },
+    {
+        "question": "Qu’est-ce qu’un GH S ?",
+        "options": [
+            "IGH à usage mixte",
+            "IGH d’enseignement",
+            "IGH d’habitation",
+            "IGH d’archives",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0
+        ]
+    },
+    {
+        "question": "Indiquer les tâches entrant dans le cadre d’une ronde de sécurité incendie",
+        "options": [
+            "Contrôler la vacuité des dégagements",
+            "Mettre en action les extincteurs",
+            "Contrôler le fonctionnement des interphones en IGH",
+            "Vérifier les contacts de fin de course des DAS",
+            "Vérifier la présence et l’état des moyens d’extinction",
+            "Distribuer le courrier",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            0,
+            2,
+            3,
+            4
+        ]
+    },
+    {
+        "question": "Un escalier encloisonné est un escalier :",
+        "options": [
+            "Protégé",
+            "À l’air libre",
+            "Mis à l’abri des fumées",
+            "Désenfumé",
+            "Monumental",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            2,
+            3
+        ]
+    },
+    {
+        "question": "Un poste central de sécurité est obligatoire en IGH ?",
+        "options": [
+            "En fonction de l’activité principale",
+            "Dans tous les cas",
+            "Suivant l’avis de la commission de sécurité compétente",
+            "Suivant la volonté de l’exploitant",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "Les dispositifs de coupure d’urgence électrique doivent :",
+        "options": [
+            "Être inaccessibles au public",
+            "Être accessible au public",
+            "Faciles à atteindre par les services de secours",
+            "Inaccessibles et autopilotés",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            2
+        ]
+    },
+    {
+        "question": "Quels sont, parmi les propositions suivantes, les éléments qui appartiennent à la classe de feu B ?",
+        "options": [
+            "L’huile moteur",
+            "L’alcool",
+            "La paille",
+            "Certains plastiques",
+            "L’oxygène",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            0,
+            1,
+            3
+        ]
+    },
+    {
+        "question": "Dans le dispositif d’intercommunication avec l’escalier et le compartiment IGH, le plan du niveau doit comporter l’emplacement :",
+        "options": [
+            "Des ouvrants de désenfumage et de leurs commandes",
+            "Des moyens de secours",
+            "Des vannes d’arrêt et du téléphone d’alerte",
+            "Des distributeurs de boissons",
+            "Du bureau d’accueil et du téléphone urbain",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            1,
+            2
+        ]
+    },
+    {
+        "question": "Le désenfumage a pour but de :",
+        "options": [
+            "Faciliter l’évacuation du public",
+            "Faciliter l’interdiction de fumer",
+            "Faciliter l’intervention des secours",
+            "Refroidir les locaux",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            2
+        ]
+    },
+    {
+        "question": "Le classement M1 correspond à :",
+        "options": [
+            "La résistance au feu d’une porte",
+            "Le potentiel d’extinction d’un extincteur",
+            "La réaction au feu d’un matériau",
+            "La manœuvre mensuelle obligatoire",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            2
+        ]
+    },
+    {
+        "question": "Quelle est la largeur d’une circulation d’une unité de passage ?",
+        "options": [
+            "0,6m",
+            "0,9m",
+            "1,20m",
+            "1,40m",
+            "1,80m",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            2
+        ]
+    },
+    {
+        "question": "Combien d’ERP le service de sécu incendie doit-il pouvoir mettre à dispo des pompiers ?",
+        "options": [
+            "Deux",
+            "Quatre",
+            "Six",
+            "Aucun",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "Combien de colonne sèche doit-il y avoir en IGH ?",
+        "options": [
+            "Une par escalier",
+            "Une par compartiment",
+            "Une par façade accessible",
+            "Un nombre défini par la commission de sécurité compétente",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            3
+        ]
+    },
+    {
+        "question": "Mon chef d’équipe me demande de contrôler un travail par point chaud venant de se terminer",
+        "options": [
+            "Je remets en service le DAI",
+            "Je contrôle les lieux du travail",
+            "J’inspecte les locaux avoisinants",
+            "Je range les moyens d’extinction et de protection supplémentaires",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            1,
+            2,
+            3
+        ]
+    },
+    {
+        "question": "Peut-on mettre en œuvre un extincteur à eau pulvérisée sur une armoire électrique de 380v ?",
+        "options": [
+            "Oui",
+            "Non",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "En règle générale, en IGH, quelle doit être la capacité minimale pour assurer l’alimentation des colonnes en charge ?",
+        "options": [
+            "60 m3",
+            "90 m3",
+            "100 m3",
+            "120 m3",
+            "200 m3",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            4
+        ]
+    },
+    {
+        "question": "Font partie des moyens de secours (au sens des articles MS) :",
+        "options": [
+            "Les extincteurs",
+            "Le SSI",
+            "Les poteaux d’incendie",
+            "Le désenfumage",
+            "L’éclairage de sécurité",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            1,
+            2,
+            3,
+            4
+        ]
+    },
+    {
+        "question": "Un extincteur CO2 est un extincteur à pression :",
+        "options": [
+            "Permanente",
+            "Auxiliaire",
+            "Variable",
+            "Atmosphérique",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            0
+        ]
+    },
+    {
+        "question": "Combien existe-t-il de principes de fonctionnement des extincteurs portatifs ?",
+        "options": [
+            "1 principe",
+            "2 principes",
+            "3 principes",
+            "4 principes",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            2
+        ]
+    },
+    {
+        "question": "Qu’est-ce qu’une UAE ?",
+        "options": [
+            "Une unité d’aide à l’entraînement",
+            "Une unité d’assistance à l’exploitation",
+            "Une unité d’assistée d’évacuation",
+            "Une unité d’aide à l’exploitation",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "Indiquer les conditions requises pour exercer l’emploi d’agent de sécurité incendie",
+        "options": [
+            "Aptitude médicale",
+            "Titulaire d’une qualification de secourisme à jour",
+            "Titulaire d’une habilitation électrique adaptée",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            0,
+            1
+        ]
+    },
+    {
+        "question": "Les IGH à usage exclusif de bureaux sont classés de la façon suivante :",
+        "options": [
+            "GHZ",
+            "GHR",
+            "GHW1",
+            "GHW2",
+            "Aucune des réponses"
+        ],
+        "correct": [
+            1
+        ]
+    },
+    {
+        "question": "Quelle est la distance d’attaque d’un extincteur portatif à CO2 de 2 kilos ?",
+        "options": [
+            "1m environ",
+            "2 à 3m",
+            "3 à 4m",
+            "5 à 6m",
+            "Plus de 6m",
+            "Aucune des réponses précédentes"
+        ],
+        "correct": [
+            1
+        ]
+    }
+      // Ajoutez les autres questions ici...
+    ];
+    
+    // Fonction de mélange (shuffle) utilisant l'algorithme de Fisher-Yates
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    
+    /* Gestion de l'overlay */
+    function openOverlay() {
+      document.getElementById("overlay-index").style.display = "flex";
+    }
+    function closeOverlay() {
+      document.getElementById("overlay-index").style.display = "none";
+    }
+    
+    /* Démarrage du Quiz */
+    function startQuiz() {
+      // Mélanger l'ordre des questions à chaque lancement
+      shuffleArray(questions);
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById("home-page").classList.remove("active");
+      document.getElementById("final-page").classList.remove("active");
+      document.getElementById("quiz-page").classList.add("active");
+      displayQuestion();
+    }
+    
+    /* Affichage de la question avec options mélangées */
+    function displayQuestion() {
+      document.getElementById("validate-btn").style.display = "inline-block";
+      document.getElementById("next-btn").style.display = "none";
+      document.getElementById("feedback").innerHTML = "";
+      document.getElementById("question-counter").innerText = 
+        "Question " + (currentQuestion + 1) + " / " + questions.length;
+      document.getElementById("question-text").innerText = 
+        questions[currentQuestion].question;
+      
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      // Créer un tableau d'objets contenant le texte et l'indice d'origine
+      let optionsArray = questions[currentQuestion].options.map((option, index) => {
+        return { text: option, originalIndex: index };
+      });
+      // Mélanger les options
+      shuffleArray(optionsArray);
+      // Afficher les options mélangées
+      optionsArray.forEach((optionObj, index) => {
+        const optionLabel = document.createElement("label");
+        optionLabel.className = "option";
+        optionLabel.htmlFor = "option" + index;
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "option" + index;
+        // La valeur correspond à l'indice d'origine
+        checkbox.value = optionObj.originalIndex;
+        optionLabel.appendChild(checkbox);
+        optionLabel.appendChild(document.createTextNode(optionObj.text));
+        optionsDiv.appendChild(optionLabel);
+      });
+    }
+    
+    /* Validation de la réponse */
+    function validateAnswer() {
+      const selected = [];
+      const checkboxes = document.querySelectorAll("#options input");
+      checkboxes.forEach(cb => { 
+        if (cb.checked) { 
+          selected.push(parseInt(cb.value)); 
+        } 
+      });
+      // Si aucune réponse n'est sélectionnée, afficher un message d'avertissement.
+      if(selected.length === 0) {
+        const feedbackDiv = document.getElementById("feedback");
+        feedbackDiv.innerHTML = "";
+        const warning = document.createElement("div");
+        warning.classList.add("warning-message");
+        warning.innerText = "Veuillez sélectionner au moins une réponse avant de valider.";
+        feedbackDiv.appendChild(warning);
+        return;
+      }
+      
+      checkboxes.forEach(cb => cb.disabled = true);
+      document.getElementById("validate-btn").style.display = "none";
+      
+      // Récupérer les indices corrects (ces indices se réfèrent aux positions d'origine)
+      const correctAnswers = questions[currentQuestion].correct.slice().sort();
+      selected.sort((a, b) => a - b);
+      const isCorrect = JSON.stringify(selected) === JSON.stringify(correctAnswers);
+      
+      if(isCorrect) {
+        score++;
+        showFeedback(true);
+        setTimeout(() => { nextQuestion(); }, 1000);
+      } else {
+        showFeedback(false);
+        highlightCorrectAnswers();
+        document.getElementById("next-btn").style.display = "inline-block";
+      }
+    }
+    
+    /* Affichage du feedback */
+    function showFeedback(isCorrect) {
+      const feedbackDiv = document.getElementById("feedback");
+      feedbackDiv.innerHTML = "";
+      if(isCorrect) {
+        const msg = document.createElement("div");
+        msg.classList.add("correct-message");
+        msg.innerText = "Bonne réponse ! ✔";
+        feedbackDiv.appendChild(msg);
+      } else {
+        const msg = document.createElement("div");
+        msg.classList.add("incorrect-message");
+        msg.innerText = "Mauvaise réponse ! ❌";
+        feedbackDiv.appendChild(msg);
+      }
+    }
+    
+    /* Mise en évidence des réponses correctes */
+    function highlightCorrectAnswers() {
+      const checkboxes = document.querySelectorAll("#options input");
+      checkboxes.forEach(cb => {
+        const val = parseInt(cb.value);
+        if(questions[currentQuestion].correct.includes(val)) {
+          cb.parentElement.classList.add("highlight");
+        }
+      });
+    }
+    
+    /* Passage à la question suivante */
+    function nextQuestion() {
+      currentQuestion++;
+      if(currentQuestion < questions.length) {
+        displayQuestion();
+      } else {
+        showFinalPage();
+      }
+    }
+    
+    /* Affichage de la page finale avec score sur 20 et message personnalisé */
+    function showFinalPage() {
+      document.getElementById("quiz-page").classList.remove("active");
+      document.getElementById("final-page").classList.add("active");
+
+      // Calcul du score sur 20
+      let scaledScore = (score * 20) / questions.length;
+      // Arrondi à 2 décimales (optionnel)
+      scaledScore = Math.round(scaledScore * 100) / 100;
+
+      document.getElementById("score").innerText = scaledScore + " / 20";
+
+      if (scaledScore >= 12) {
+        document.getElementById("result-text").innerText = "Félicitations, vous avez réussi l'examen !";
+      } else {
+        document.getElementById("result-text").innerText = "Dommage, vous n'avez pas atteint le seuil de réussite.";
+      }
+    }
+    
+    /* Recommencer le Quiz */
+    function restartQuiz() {
+      document.getElementById("final-page").classList.remove("active");
+      document.getElementById("home-page").classList.add("active");
+    }
+  </script>
+</body>
+</html>
